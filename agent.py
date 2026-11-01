@@ -133,4 +133,5 @@ def generate_audit_report(target_url: str, analysis_data: dict) -> str:
 
 ## Predictive Impact & Consequences
 {analysis_data.get('predictive_insights', 'N/A')}
+"""
 
