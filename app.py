@@ -153,7 +153,7 @@ elif app_mode == "📊 Intelligence History Log":
 
 # ----------------------------------------------------
 # TAB 3: BLACKLISTED INFRASTRUCTURE
-# ----------------------------------------------------
+# --------------------------------://
 elif app_mode == "🚫 Blacklisted Infrastructure":
     st.subheader("Contained Threat Blacklist Database")
     if not st.session_state.blacklist:
