@@ -66,7 +66,7 @@ if app_mode == "🔍 Threat Analysis Workbench":
         "⚡ Select Benchmark Sample Vector:",
         [
             "-- Custom URL Entry --", 
-            "🟢 Verified Safe Portal (GitHub / Wikipedia / Google)", 
+            "🟢 Verified Safe Portal (GitHub / Wikipedia / Google / SBI / Govt)", 
             "🟡 Suspicious Banking Verification Gateway", 
             "🔴 Malicious Payload Execution Vector (.xyz)"
         ],
@@ -76,7 +76,7 @@ if app_mode == "🔍 Threat Analysis Workbench":
 
     url_input = st.text_input("Enter Target URL for Inspection:", key="url_input", placeholder="https://...")
     
-    if st.button("🚀 Execute Deep Threat Audit", type="primary"):
+    if st.button("🚀 Initialize Threat Inspection", type="primary"):
         if not url_input.strip():
             st.warning("Please provide a valid URL string.")
         else:
@@ -128,6 +128,32 @@ if app_mode == "🔍 Threat Analysis Workbench":
 
         st.markdown("---")
         
+        # Professional Action Controls & Blacklist Integration
+        st.subheader("🛡️ Action Controls & Incident Response")
+        
+        already_blacklisted = any(b['url'] == url_scanned for b in st.session_state.blacklist)
+        
+        if risk_val >= 50:
+            if already_blacklisted:
+                st.warning("⚠️ This target URL is already isolated in the Blacklisted Infrastructure database.")
+            else:
+                if st.button("🔒 Isolate & Quarantine Threat", type="primary"):
+                    blacklist_entry = {
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "url": url_scanned,
+                        "risk": risk_val,
+                        "type": analysis.get("risk_type", "Unknown")
+                    }
+                    st.session_state.blacklist.insert(0, blacklist_entry)
+                    st.toast("Threat successfully isolated and added to security blacklist!", icon="🚨")
+                    st.rerun()
+        else:
+            if st.button("✔️ Authorize & Proceed"):
+                st.toast("Infrastructure authorized for safe navigation.", icon="✅")
+                st.success("Action Executed: Session cleared for secure interaction.")
+
+        st.markdown("---")
+        
         report_text = generate_audit_report(url_scanned, analysis)
         st.download_button(
             label="📥 Export Forensic Audit Report",
@@ -153,13 +179,26 @@ elif app_mode == "📊 Intelligence History Log":
 
 # ----------------------------------------------------
 # TAB 3: BLACKLISTED INFRASTRUCTURE
-# --------------------------------://
+# ----------------------------------------------------
 elif app_mode == "🚫 Blacklisted Infrastructure":
     st.subheader("Contained Threat Blacklist Database")
     if not st.session_state.blacklist:
-        st.info("Blacklist repository is currently empty.")
+        st.info("Blacklist repository is currently empty. Quarantine high-risk links from the Threat Analysis Workbench.")
     else:
-        for idx, b_item in enumerate(st.session_state.blacklist):
-            st.markdown(f"### 🔴 {b_item['url']}")
-            st.write(f"**Blacklisted Timestamp:** {b_item['timestamp']}")
-            st.write(f"**Risk Score:** {b_item['risk']}% | **Vector:** {b_item['type']}")
+        if st.button("⚠️ Purge Blacklist Database"):
+            st.session_state.blacklist = []
+            st.rerun()
+            
+        st.markdown("---")
+        for idx, b_item in enumerate(list(st.session_state.blacklist)):
+            col_info, col_action = st.columns([4, 1])
+            with col_info:
+                st.markdown(f"### 🔴 {b_item['url']}")
+                st.write(f"**Quarantined Timestamp:** {b_item['timestamp']} | **Risk Score:** {b_item['risk']}% | **Vector:** {b_item['type']}")
+            with col_action:
+                st.write("") # spacing
+                if st.button("♻️ Restore", key=f"restore_{idx}_{b_item['url']}"):
+                    st.session_state.blacklist = [item for item in st.session_state.blacklist if item['url'] != b_item['url']]
+                    st.toast(f"Successfully restored domain from blacklist!", icon="✅")
+                    st.rerun()
+            st.markdown("---")
